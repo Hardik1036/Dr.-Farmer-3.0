@@ -185,14 +185,12 @@ Content-Type: multipart/form-data
 
 | Name | Role | Email |
 |------|------|--------|
-Hardik Nopany | Backend & AI/ML | B25BS1115@iitj.ac.in
-Nil Kumar Bhadani | Frontend & AI/ML | B25BS1225@iitj.ac.in 
-Chandani Kumari | Model Training & Major in AI/ML | B25BS1447@iitj.ac.in 
-Udayan Maiti | Database development | B24BS2389@iitj.ac.in
-Marut shree | Helped in Database development | B24BS2195@iitj.ac.in 
-Bhoomi Kumari | Presentation & Research | B25BS1443@iitj.ac.in 
-
-
+| Hardik Nopany | Backend & AI/ML | B25BS1115@iitj.ac.in |
+| Nil Kumar Bhadani | Frontend & AI/ML | B25BS1225@iitj.ac.in |
+| Chandani Kumari | Model Training & Major in AI/ML | B25BS1447@iitj.ac.in |
+| Udayan Maiti | Database development | B24BS2389@iitj.ac.in |
+| Marut shree | Database development | B24BS2195@iitj.ac.in |
+| Bhoomi Kumari | Presentation & Research | B25BS1443@iitj.ac.in |
 
 ---
 
@@ -200,4 +198,7 @@ Bhoomi Kumari | Presentation & Research | B25BS1443@iitj.ac.in
 
 - Built for Smart India Hackathon (SIH) internal selection round
 - Trained on a custom dataset of 54,000+ crop and livestock images
+- Plant model trained on the PlantVillage dataset (38 classes)
+- Livestock model trained on a Lumpy Skin Disease cattle dataset
 - Designed with accessibility for low-literacy farmers as the core principle
+
