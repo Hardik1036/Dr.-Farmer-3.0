@@ -183,14 +183,16 @@ Content-Type: multipart/form-data
 
 ## 👥 Team Alpha Beta
 
-| Name | Role | GitHub |
+| Name | Role | Email |
 |------|------|--------|
-| Nil Kumar Bhadani | Frontend / UI-UX Development | [@nilkumarbhadani](https://github.com/nilkumarbhadani) |
-| _Teammate Name_ | Backend Development | _link_ |
-| _Teammate Name_ | ML Model Training | _link_ |
-| _Teammate Name_ | ML Model Training | _link_ |
-| _Teammate Name_ | Research & Documentation | _link_ |
-| _Teammate Name_ | Presentation & Testing | _link_ |
+Hardik Nopany | Backend & AI/ML | B25BS1115@iitj.ac.in
+Nil Kumar Bhadani | Frontend & AI/ML | B25BS1225@iitj.ac.in 
+Chandani Kumari | Model Training & Major in AI/ML | B25BS1447@iitj.ac.in 
+Udayan Maiti | Database development | B24BS2389@iitj.ac.in
+Marut shree | Helped in Database development | B24BS2195@iitj.ac.in 
+Bhoomi Kumari | Presentation & Research | B25BS1443@iitj.ac.in 
+
+
 
 ---
 
