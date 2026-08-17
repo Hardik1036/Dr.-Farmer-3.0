@@ -43,16 +43,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 app = FastAPI(title="Dr. Farmer Enterprise Backend", version="2.0")
 
 # ==========================================
-# CONFIDENCE THRESHOLD CONFIGURATION
-# ==========================================
-# High threshold (>= 0.70): High certainty, full diagnosis and medical recommendations
-# Moderate threshold (0.45 - 0.69): Probable diagnosis with cross-check advisory
-# Low threshold (< 0.45): Uncertain diagnosis, prompts user to retake clearer photo
-CONFIDENCE_THRESHOLD_HIGH = float(os.getenv("CONFIDENCE_THRESHOLD_HIGH", "0.70"))
-CONFIDENCE_THRESHOLD_MODERATE = float(os.getenv("CONFIDENCE_THRESHOLD_MODERATE", "0.45"))
-
-
-# ==========================================
 # CORS CONFIGURATION
 # ==========================================
 app.add_middleware(
@@ -212,11 +202,7 @@ def read_status():
         "plant_model_loaded": plant_model_exists,
         "livestock_model_loaded": livestock_model_exists,
         "supabase_connected": supabase is not None,
-        "engine": "TFLite / LiteRT AI Engine (38 Plant / 2 Cattle Classes)" if (plant_interpreter is not None) else "TFLite Fallback Engine",
-        "thresholds": {
-            "high": CONFIDENCE_THRESHOLD_HIGH,
-            "moderate": CONFIDENCE_THRESHOLD_MODERATE
-        }
+        "engine": "TFLite / LiteRT AI Engine (38 Plant / 2 Cattle Classes)" if (plant_interpreter is not None) else "TFLite Fallback Engine"
     }
 
 # --- 1. DIAGNOSTIC SCANNER ---
@@ -326,25 +312,6 @@ async def diagnostic_scan(
             logger.info(f"Heuristic Fallback Used -> Class Index: {pred_idx}, Confidence: {confidence}")
 
         # Determine confidence tier, verification status, and quality advisories
-        if confidence >= CONFIDENCE_THRESHOLD_HIGH:
-            confidence_level = "high"
-            verification_status = "VERIFIED"
-            is_confident = True
-            advisory = "High-confidence diagnosis verified by Dr. Farmer AI vision."
-            advisory_hi = "डॉ. फार्मर एआई विज़न द्वारा उच्च सटीकता के साथ प्रमाणित जांच।"
-        elif confidence >= CONFIDENCE_THRESHOLD_MODERATE:
-            confidence_level = "moderate"
-            verification_status = "PROBABLE"
-            is_confident = True
-            advisory = "Moderate confidence. Cross-verify physical leaf symptoms before applying chemical remedies."
-            advisory_hi = "मध्यम सटीकता। रासायनिक छिड़काव या कीटनाशक खरीदने से पहले लक्षणों की अच्छी तरह पुष्टि करें।"
-        else:
-            confidence_level = "low"
-            verification_status = "UNCERTAIN"
-            is_confident = False
-            advisory = "Low confidence. Photo may be blurry, poorly lit, or out-of-focus. Please retake photo in clear natural daylight."
-            advisory_hi = "एआई सटीकता कम है। फोटो धुंधला या कम रोशनी वाला हो सकता है। कृपया पर्याप्त प्राकृतिक रोशनी में स्पष्ट फोटो दोबारा लें।"
-
         # Lookup disease remedy from Supabase disease_catalog if available, else local catalog
         disease_info = fallback_classes.get(pred_idx, fallback_classes.get(23 if is_plant else 0, {}))
         pathology = disease_info.get("name", "Crop/Livestock Condition")
@@ -371,14 +338,6 @@ async def diagnostic_scan(
             except Exception as cat_err:
                 logger.warning(f"Supabase disease_catalog lookup fallback: {cat_err}")
 
-        # If confidence is below moderate threshold, replace specific pathology with safe uncertain status to prevent misdiagnosis
-        if not is_confident:
-            pathology = f"Uncertain: Possibly {pathology}"
-            pathology_hi = f"अस्पष्ट: संभवतः {pathology_hi}"
-            severity = "caution"
-            medical_remedy = "Do not purchase or spray chemicals without confirmation. Consult a local Krishi Vigyan Kendra (KVK) or veterinarian."
-            home_remedy = "Retake photo in clear natural daylight, holding camera 15-20cm away from the affected leaf or skin lesion."
-
         scan_id = str(uuid.uuid4())
         timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -404,13 +363,6 @@ async def diagnostic_scan(
             "pathology_detected_hi": pathology_hi,
             "severity": severity,
             "confidence_score": round(confidence, 4),
-            "confidence_level": confidence_level,
-            "verification_status": verification_status,
-            "is_confident": is_confident,
-            "advisory": advisory,
-            "advisory_hi": advisory_hi,
-            "threshold_high": CONFIDENCE_THRESHOLD_HIGH,
-            "threshold_moderate": CONFIDENCE_THRESHOLD_MODERATE,
             "medical_remedy": medical_remedy,
             "home_remedy": home_remedy,
             "raw_probabilities": raw_probabilities,
