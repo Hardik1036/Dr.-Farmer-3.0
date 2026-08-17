@@ -83,15 +83,21 @@ export default function WeatherWidget({ lang }) {
       let resolvedName = cityToFetch;
 
       if (!latitude || !longitude) {
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityToFetch)}&count=1`);
-        const geoData = await geoRes.json();
-        if (geoData.results && geoData.results.length > 0) {
-          latitude = geoData.results[0].latitude;
-          longitude = geoData.results[0].longitude;
-          const { name, admin1 } = geoData.results[0];
-          resolvedName = admin1 ? `${name}, ${admin1}` : name;
-        } else {
-          throw new Error(`Location '${cityToFetch}' not found`);
+        try {
+          const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityToFetch)}&count=1`);
+          const geoData = await geoRes.json();
+          if (geoData.results && geoData.results.length > 0) {
+            latitude = geoData.results[0].latitude;
+            longitude = geoData.results[0].longitude;
+            const { name, admin1 } = geoData.results[0];
+            resolvedName = admin1 ? `${name}, ${admin1}` : name;
+          } else {
+            latitude = 28.6139;
+            longitude = 77.2090;
+          }
+        } catch {
+          latitude = 28.6139;
+          longitude = 77.2090;
         }
       }
 
@@ -169,36 +175,37 @@ export default function WeatherWidget({ lang }) {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
+        let detectedName = `GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`;
         try {
-          // Reverse geocode to city name
-          const revRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?latitude=${latitude}&longitude=${longitude}&count=1`);
-          let detectedName = `GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`;
+          // Reverse geocode to city/region name using client-side API
+          const revRes = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
           if (revRes.ok) {
             const revData = await revRes.json();
-            if (revData.results && revData.results[0]) {
-              const { name, admin1 } = revData.results[0];
-              detectedName = admin1 ? `${name}, ${admin1}` : name;
+            const city = revData.city || revData.locality || revData.principalSubdivision;
+            if (city) {
+              detectedName = revData.principalSubdivision ? `${city}, ${revData.principalSubdivision}` : city;
             }
           }
-
-          setCityName(detectedName);
-          setInputCity(detectedName);
-          localStorage.setItem('drfarmer_location', detectedName);
-          fetchWeather(detectedName, latitude, longitude);
-          setSaveSuccess(true);
-          setTimeout(() => {
-            setSaveSuccess(false);
-            setShowCityModal(false);
-          }, 900);
         } catch (e) {
           console.warn('Reverse geocode error:', e);
-          const fallbackGps = `GPS Loc`;
-          setCityName(fallbackGps);
-          fetchWeather(fallbackGps, latitude, longitude);
-          setShowCityModal(false);
-        } finally {
-          setDetectingGps(false);
         }
+
+        setCityName(detectedName);
+        setInputCity(detectedName);
+        try {
+          localStorage.setItem('drfarmer_location', detectedName);
+        } catch (err) {
+          console.warn(err);
+        }
+        fetchWeather(detectedName, latitude, longitude);
+        setSaveSuccess(true);
+        setTimeout(() => {
+          setSaveSuccess(false);
+          setShowCityModal(false);
+        }, 900);
+        setDetectingGps(false);
       },
       (err) => {
         console.warn('Geolocation error:', err);

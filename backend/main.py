@@ -3,9 +3,11 @@ import io
 import uuid
 import json
 import logging
+import urllib.parse
 from datetime import datetime, timezone
 from typing import Optional
 import numpy as np
+import requests
 from PIL import Image
 from pydantic import BaseModel
 try:
@@ -427,23 +429,33 @@ def check_soil_suitability(payload: SoilCheckRequest):
     }
 
 # --- 4. WEATHER FORECAST ---
+@app.get("/api/weather")
 @app.get("/api/weather/")
 def get_farming_weather(city: Optional[str] = None, latitude: Optional[float] = None, longitude: Optional[float] = None):
     try:
-        if city:
-            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1"
-            geo_resp = requests.get(geo_url, timeout=5)
+        headers = {"User-Agent": "DrFarmer-AgriVision/1.0"}
+        resolved_name = city
+
+        # Only geocode if latitude & longitude were not explicitly provided
+        if city and (latitude is None or longitude is None):
+            encoded_city = urllib.parse.quote(city.strip())
+            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={encoded_city}&count=1"
+            geo_resp = requests.get(geo_url, headers=headers, timeout=5)
             if geo_resp.status_code == 200:
                 geo_data = geo_resp.json()
                 if "results" in geo_data and len(geo_data["results"]) > 0:
-                    latitude = geo_data["results"][0]["latitude"]
-                    longitude = geo_data["results"][0]["longitude"]
+                    result = geo_data["results"][0]
+                    latitude = result.get("latitude")
+                    longitude = result.get("longitude")
+                    name = result.get("name", city)
+                    admin1 = result.get("admin1", "")
+                    resolved_name = f"{name}, {admin1}" if admin1 else name
 
         if latitude is None or longitude is None:
             latitude, longitude = 28.6139, 77.2090  # Default to New Delhi
 
         weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current_weather=true"
-        resp = requests.get(weather_url, timeout=5)
+        resp = requests.get(weather_url, headers=headers, timeout=5)
         if resp.status_code == 200:
             data = resp.json().get("current_weather", {})
             temp = data.get("temperature", 26)
@@ -451,9 +463,9 @@ def get_farming_weather(city: Optional[str] = None, latitude: Optional[float] = 
             weathercode = data.get("weathercode", 0)
 
             return {
-                "location_used": city if city else f"Lat: {latitude:.2f}, Lon: {longitude:.2f}",
-                "temperature_celsius": temp,
-                "wind_speed_kmh": windspeed,
+                "location_used": resolved_name if resolved_name else f"Lat: {latitude:.2f}, Lon: {longitude:.2f}",
+                "temperature_celsius": round(temp) if isinstance(temp, (int, float)) else temp,
+                "wind_speed_kmh": round(windspeed) if isinstance(windspeed, (int, float)) else windspeed,
                 "weather_code": weathercode,
                 "farming_conditions": "Favorable" if 15 <= temp <= 35 else "Extreme conditions: Monitor irrigation closely"
             }
