@@ -196,9 +196,15 @@ class LivestockCreate(BaseModel):
 # ENDPOINTS
 # ==========================================
 
-@app.get("/api/status")
+# Fast root health check for Render / cloud deployment
 @app.get("/")
-def read_root():
+def root_health_check():
+    """Fast, lightweight health check returning 200 OK."""
+    return {"status": "ok", "message": "Dr. Farmer Backend is active"}
+
+@app.get("/health")
+@app.get("/api/status")
+def read_status():
     plant_model_exists = os.path.exists(PLANT_TFLITE_PATH) or plant_interpreter is not None
     livestock_model_exists = os.path.exists(LIVESTOCK_TFLITE_PATH) or livestock_interpreter is not None
     return {
@@ -637,4 +643,5 @@ async def process_voice_command(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info")
