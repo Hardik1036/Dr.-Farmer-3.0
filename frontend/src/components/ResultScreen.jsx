@@ -195,6 +195,24 @@ export default function ResultScreen({
     }
   };
 
+  // Confidence level tokens and evaluation
+  const confPercent = parseInt(result.confidence, 10) || 90;
+  const isHighConf = result.confidenceLevel === 'high' || (!result.confidenceLevel && confPercent >= 70);
+  const isModerateConf = result.confidenceLevel === 'moderate' || (!result.confidenceLevel && confPercent >= 45 && confPercent < 70);
+  const isLowConf = result.confidenceLevel === 'low' || (!result.confidenceLevel && confPercent < 45);
+
+  const confBadgeStyle = isHighConf
+    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+    : isModerateConf
+    ? 'bg-amber-50 text-amber-900 border-amber-300'
+    : 'bg-rose-50 text-rose-800 border-rose-300 animate-pulse';
+
+  const confBadgeLabel = isHighConf
+    ? (lang === 'hi' ? `सटीकता: ${result.confidence} (उच्च)` : `Accuracy: ${result.confidence} (High)`)
+    : isModerateConf
+    ? (lang === 'hi' ? `सटीकता: ${result.confidence} (मध्यम)` : `Accuracy: ${result.confidence} (Moderate)`)
+    : (lang === 'hi' ? `सटीकता: ${result.confidence} (अस्पष्ट)` : `Accuracy: ${result.confidence} (Low)`);
+
   return (
     <div className="space-y-4 pb-28">
       
@@ -221,14 +239,15 @@ export default function ResultScreen({
       {/* 2. DIAGNOSIS CARD: DISEASE NAME + SEVERITY BADGE + PHOTO */}
       <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#e5dcce]">
         
-        {/* Severity Badge */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Severity Badge & Confidence Quality Badge */}
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <span className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide shadow-xs ${config.bg} ${config.textColor}`}>
             <SeverityIcon className="w-3.5 h-3.5" />
             <span>{config.label}</span>
           </span>
-          <span className="text-xs font-bold text-[#647464]">
-            {lang === 'hi' ? `सटीकता: ${result.confidence}` : `Accuracy: ${result.confidence}`}
+          <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold border ${confBadgeStyle}`}>
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>{confBadgeLabel}</span>
           </span>
         </div>
 
@@ -263,6 +282,43 @@ export default function ResultScreen({
             </p>
           </div>
         </div>
+
+        {/* Quality / Confidence Advisory Banners */}
+        {isLowConf && (
+          <div className="mt-3.5 bg-rose-50 border border-rose-200 rounded-2xl p-3.5 flex items-start space-x-3 text-left">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs font-bold text-rose-950 mb-0.5">
+                {lang === 'hi' ? 'कम सटीकता चेतावनी:' : 'Low Confidence Warning:'}
+              </p>
+              <p className="text-[11px] text-rose-800 leading-relaxed mb-2.5">
+                {lang === 'hi'
+                  ? (result.advisoryHi || 'चित्र धुंधला या अपर्याप्त रोशनी वाला होने के कारण एआई पूरी तरह आश्वस्त नहीं है।')
+                  : (result.advisory || 'The image is unclear or poorly lit. The AI could not make a high-confidence diagnosis.')}
+              </p>
+              <button
+                onClick={onScanAnother}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-transform active:scale-95 shadow-xs"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{lang === 'hi' ? 'स्पष्ट फोटो दोबारा लें' : 'Retake Clear Photo'}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isModerateConf && (
+          <div className="mt-3.5 bg-[#fbf7ee] border border-[#e8ddc9] rounded-2xl p-3 flex items-start space-x-2.5 text-left">
+            <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-[11px] text-[#634e2c] leading-relaxed">
+                {lang === 'hi'
+                  ? (result.advisoryHi || 'मध्यम सटीकता। रासायनिक छिड़काव से पहले पत्तियों के लक्षणों की अच्छी तरह पुष्टि कर लें।')
+                  : (result.advisory || 'Moderate confidence. Cross-verify physical symptoms before purchasing or applying chemical sprays.')}
+              </p>
+            </div>
+          </div>
+        )}
 
       </div>
 
