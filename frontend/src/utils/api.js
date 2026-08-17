@@ -4,7 +4,7 @@
  * Supports relative proxying, direct localhost:8000, and offline fallback.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://dr-farmer-agrivision.onrender.com';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://dr-farmer-3-0.onrender.com';
 
 async function fetchWithFallback(endpoint, options = {}) {
   // 1. Try relative endpoint first (works with Vite proxy / Netlify / relative routing)
