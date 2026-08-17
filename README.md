@@ -14,7 +14,7 @@ Instant, farmer-friendly disease diagnosis for Indian agriculture — built for 
 
 ## 🌐 Live Demo
 
-<!-- Live demo link will be added here after deployment -->
+https://dr-farmer-3-0.vercel.app/
 
 ---
 
@@ -175,9 +175,9 @@ Content-Type: multipart/form-data
 - [x] TensorFlow Lite optimized inference
 - [x] Live weather integration
 - [x] 8 Indian languages (text support)
-- [ ] Offline-first support (on-device inference without internet)
+- [x] Offline-first support (on-device inference without internet)
 - [ ] Extension worker / FPO dashboard view
-- [ ] Cloud deployment for live demo access
+- [x] Cloud deployment for live demo access
 
 ---
 
